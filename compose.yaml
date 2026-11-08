@@ -1,0 +1,38 @@
+# Consent. Purposes, sites and İYS are set in consent.yaml; sites load one script from here.
+#
+#   openssl rand -hex 32 > openasy-kek   # consent's key: sign-in secrets (ADR 0021). Keep it with your backups
+#   docker compose up -d
+#   docker compose logs consent | grep 'no owner yet'   # the one-time link that creates the owner account
+services:
+  consent:
+    image: ghcr.io/openasy/consent:0.1.0
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    tmpfs: [/tmp]
+    ports:
+      - "127.0.0.1:8080:8080" # UI, API, the sites' banner and the preference page; put a TLS proxy in front so the sites can reach it
+    volumes:
+      - consent-data:/data # SQLite database: people, the history of their answers, the İYS outbox
+      - ./config:/config:ro # consent.yaml; mount the folder so an editor's save reaches it
+    secrets:
+      - openasy-kek # mounted at /run/secrets/openasy-kek
+    environment:
+      # The address people open Consent at, and the sites' pages load the banner from; with a TLS proxy, its https:// URL.
+      CONSENT_PUBLIC_URL: ${CONSENT_PUBLIC_URL:-http://localhost:8080}
+      CONSENT_CONFIG: /config/consent.yaml
+      # The İYS API user the file's iys.username and iys.password name:
+      # CONSENT_IYS_USERNAME: ${CONSENT_IYS_USERNAME}
+      # CONSENT_IYS_PASSWORD: ${CONSENT_IYS_PASSWORD}
+      # Sign in with your identity provider (OIDC), see the README:
+      # OPENASY_OIDC_ISSUER: https://login.example.com
+      # OPENASY_OIDC_CLIENT_ID: consent
+      # OPENASY_OIDC_CLIENT_SECRET: ${OPENASY_OIDC_CLIENT_SECRET}
+
+volumes:
+  consent-data:
+
+secrets:
+  openasy-kek:
+    file: ./openasy-kek

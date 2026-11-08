@@ -1,0 +1,56 @@
+# What Consent asks people, and where. This file is the only place purposes and sites are added, changed and removed;
+# a change is picked up within a minute, and a file with a mistake leaves the last good one in place.
+#
+# A version's text never changes once it was applied: people agreed to it as it was. A new wording is a new version.
+purposes:
+  - id: necessary
+    name: { en: Necessary, tr: Zorunlu, de: Notwendig }
+    channels: [web]
+    required: true # shown on the banner, always on, never asked
+    versions:
+      - version: 1
+        text:
+          en: The session and the choices on this banner. The site does not work without them.
+          tr: Oturum ve bu bannerdaki seçimler. Site bunlar olmadan çalışmaz.
+          de: Die Sitzung und die Auswahl in diesem Banner. Ohne sie funktioniert die Website nicht.
+  - id: analytics
+    name: { en: Measurement, tr: Ölçüm, de: Messung }
+    channels: [web]
+    versions:
+      - version: 1
+        text:
+          en: Which pages are read and how people move through the site, kept by us and nowhere else.
+          tr: Hangi sayfaların okunduğu ve sitede nasıl gezinildiği; yalnızca bizde saklanır.
+          de: Welche Seiten gelesen werden und wie man sich durch die Website bewegt, nur bei uns gespeichert.
+  - id: marketing
+    name: { en: Offers and news, tr: Kampanya ve duyurular, de: Angebote und Neuigkeiten }
+    channels: [email, sms, call]
+    iys: true # the brand's commercial message consent, kept in step with İYS
+    versions:
+      - version: 1
+        from: 2026-01-01
+        text:
+          en: Offers, campaigns and news from Example by email, SMS and phone.
+          tr: Example'dan e-posta, SMS ve telefonla kampanya, fırsat ve duyurular.
+          de: Angebote, Aktionen und Neuigkeiten von Example per E-Mail, SMS und Telefon.
+      # - version: 2
+      #   renew: true   # consents to version 1 no longer count; people are asked again
+      #   text: ...
+
+sites:
+  - name: shop
+    domains: [https://www.example.com, https://example.com]
+    banner: [necessary, analytics] # web purposes on the banner (all of them by default)
+    preferences: [marketing] # message purposes a preference link shows (all of them by default)
+    analytics: analytics # starts OpenAsy Analytics' openasy.consent() on a site with consent: required
+    privacy: https://www.example.com/privacy
+
+# İYS, Türkiye's İleti Yönetim Sistemi. The account and brand are İYS's numbers; username and password name the
+# environment variables that hold the API user, never the values.
+# iys:
+#   account: 123456
+#   brand: 654321
+#   username: CONSENT_IYS_USERNAME
+#   password: CONSENT_IYS_PASSWORD
+#   # url: https://api.sandbox.iys.org.tr   # the sandbox, to try it first
+#   pull: 5m

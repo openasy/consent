@@ -1,0 +1,3788 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "OpenAsy Consent API",
+    "version": "0.1.0",
+    "summary": "Who agreed to what, on which channel and to which text, with İYS kept in step.",
+    "description": "Every screen of Consent uses this API, and so can your scripts and the other products (ADR 0014). Within `/api/v1` changes are additive only; anything removed is deprecated first (ADR 0024). Errors use Problem Details (RFC 9457).\n\nPurposes, their texts and the sites are set in the product's file, never through the API. The site's script at `/c/<site>.js` reads and sends `/api/v1/choices`. Everything else takes the session of a signed-in person or an API token, and each operation names the role it needs (`x-openasy-role`: viewer, editor, admin; ADR 0003).\n\nSign-in, members and API tokens are under `/api/v1/auth`, provided by [@openasy/auth](https://github.com/openasy/auth#routes).",
+    "license": {
+      "name": "AGPL-3.0-only",
+      "identifier": "AGPL-3.0-only"
+    }
+  },
+  "servers": [
+    {
+      "url": "/",
+      "description": "This Consent"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Check",
+      "description": "May we reach this person on this channel for this purpose."
+    },
+    {
+      "name": "Consents",
+      "description": "Recording answers from your forms and applications."
+    },
+    {
+      "name": "People",
+      "description": "Each person's answers and history, and erasure on request."
+    },
+    {
+      "name": "Purposes",
+      "description": "The purposes, their texts and the sites, as the file sets them."
+    },
+    {
+      "name": "İYS",
+      "description": "Türkiye's İleti Yönetim Sistemi, kept in step both ways."
+    },
+    {
+      "name": "Banner",
+      "description": "What the site's script reads and sends."
+    },
+    {
+      "name": "Product",
+      "description": "Version and overview of this Consent."
+    }
+  ],
+  "paths": {
+    "/api/v1/check": {
+      "get": {
+        "operationId": "check",
+        "tags": [
+          "Check"
+        ],
+        "summary": "May we reach this person",
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "apiToken": []
+          },
+          {
+            "adminToken": []
+          }
+        ],
+        "description": "Whether a person may be reached on a channel for a purpose: only while their latest answer for it is yes, to a version of the text the file still counts. Name the person by one of email, phone, id, browser or person. Messages, Analytics, Forms and Audience ask this before they act. Needs the viewer role.",
+        "parameters": [
+          {
+            "name": "purpose",
+            "in": "query",
+            "required": true,
+            "description": "The purpose's id in the file.",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 254
+            }
+          },
+          {
+            "name": "channel",
+            "in": "query",
+            "required": true,
+            "description": "email, sms, call or web.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "email",
+                "sms",
+                "call",
+                "web"
+              ]
+            }
+          },
+          {
+            "name": "email",
+            "in": "query",
+            "required": false,
+            "description": "The person's email address.",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 254
+            }
+          },
+          {
+            "name": "phone",
+            "in": "query",
+            "required": false,
+            "description": "The person's phone number, such as +905551112233.",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 254
+            }
+          },
+          {
+            "name": "id",
+            "in": "query",
+            "required": false,
+            "description": "Your own id for the person.",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 254
+            }
+          },
+          {
+            "name": "browser",
+            "in": "query",
+            "required": false,
+            "description": "The banner's browser id.",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 254
+            }
+          },
+          {
+            "name": "person",
+            "in": "query",
+            "required": false,
+            "description": "A person id this API returned.",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 254
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The answer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "503": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "x-openasy-role": "viewer"
+      },
+      "post": {
+        "operationId": "checkMany",
+        "tags": [
+          "Check"
+        ],
+        "summary": "May we reach these people",
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "apiToken": []
+          },
+          {
+            "adminToken": []
+          }
+        ],
+        "description": "The same for up to 1000 people at once, such as a campaign's list, answered in the same order. Needs the viewer role.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "One answer per person.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckList"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "413": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "503": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "x-openasy-role": "viewer"
+      }
+    },
+    "/api/v1/checks": {
+      "get": {
+        "operationId": "listChecks",
+        "tags": [
+          "Check"
+        ],
+        "summary": "Latest checks",
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "apiToken": []
+          },
+          {
+            "adminToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The last checks the products made and how many were asked today, by caller. Kept in memory only.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Checks"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "503": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "description": "Needs the viewer role.",
+        "x-openasy-role": "viewer"
+      }
+    },
+    "/api/v1/activity": {
+      "get": {
+        "operationId": "activity",
+        "tags": [
+          "Consents"
+        ],
+        "summary": "Answers over time",
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "apiToken": []
+          },
+          {
+            "adminToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "days",
+            "in": "query",
+            "required": false,
+            "description": "1 to 365; 30 by default.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 365
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Answers a day, where they came from, the latest changes and who may be reached now.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Activity"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "503": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "description": "Needs the viewer role.",
+        "x-openasy-role": "viewer"
+      }
+    },
+    "/api/v1/conflicts": {
+      "get": {
+        "operationId": "listConflicts",
+        "tags": [
+          "İYS"
+        ],
+        "summary": "Where İYS and the record disagree",
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "apiToken": []
+          },
+          {
+            "adminToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "1 to 500; 100 by default.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Both answers are kept; the later one counts.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConflictList"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "503": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "description": "Needs the viewer role.",
+        "x-openasy-role": "viewer"
+      }
+    },
+    "/api/v1/iys/log": {
+      "get": {
+        "operationId": "iysLog",
+        "tags": [
+          "İYS"
+        ],
+        "summary": "Sync log",
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "apiToken": []
+          },
+          {
+            "adminToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "1 to 500; 100 by default.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "What went to İYS and what came from it, newest first.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IysLog"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "503": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "description": "Needs the viewer role.",
+        "x-openasy-role": "viewer"
+      }
+    },
+    "/api/v1/consents": {
+      "post": {
+        "operationId": "recordConsents",
+        "tags": [
+          "Consents"
+        ],
+        "summary": "Record answers",
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "apiToken": []
+          },
+          {
+            "adminToken": []
+          }
+        ],
+        "description": "Answers from your forms and applications. The person is found by any identifier given, or added; the missing identifiers are added to them. Answers on the purpose kept in step with İYS are queued for İYS. Nothing recorded can be changed afterwards: a change of mind is a new answer. Needs the editor role.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Recorded, with what each answer means now.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Recorded"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "413": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "503": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "x-openasy-role": "editor"
+      }
+    },
+    "/api/v1/links": {
+      "post": {
+        "operationId": "createLink",
+        "tags": [
+          "Consents"
+        ],
+        "summary": "A preference link",
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "apiToken": []
+          },
+          {
+            "adminToken": []
+          }
+        ],
+        "description": "A signed link to a site's preference page that shows this person's message purposes, for the footer of an email or an SMS. Needs the editor role.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The link.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Link"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "413": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "503": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "x-openasy-role": "editor"
+      }
+    },
+    "/api/v1/people": {
+      "get": {
+        "operationId": "listPeople",
+        "tags": [
+          "People"
+        ],
+        "summary": "People",
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "apiToken": []
+          },
+          {
+            "adminToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "description": "Part of an email, phone number or id.",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 254
+            }
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "required": false,
+            "description": "today: answered today; conflicts: İYS and the record disagree.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "today",
+                "conflicts"
+              ]
+            }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "description": "From nextCursor of the page before.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "1 to 500; 100 by default.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Newest first.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonList"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "503": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "description": "Needs the viewer role.",
+        "x-openasy-role": "viewer"
+      }
+    },
+    "/api/v1/people/{id}": {
+      "get": {
+        "operationId": "getPerson",
+        "tags": [
+          "People"
+        ],
+        "summary": "A person",
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "apiToken": []
+          },
+          {
+            "adminToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Their identifiers, what each answer means now, the whole history and what went to İYS.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Person"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "503": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "description": "Needs the viewer role.",
+        "x-openasy-role": "viewer"
+      },
+      "delete": {
+        "operationId": "erasePerson",
+        "tags": [
+          "People"
+        ],
+        "summary": "Erase a person on request",
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "apiToken": []
+          },
+          {
+            "adminToken": []
+          }
+        ],
+        "description": "For a request under KVKK Art. 7 and 11 or GDPR Art. 17: their identifiers and history are removed, and the erasure is logged without them. İYS has no erasure; it is told no for every channel the person had said yes to. Needs the admin role.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "reason",
+            "in": "query",
+            "required": true,
+            "description": "Why, such as the request's reference; 3 to 500 characters.",
+            "schema": {
+              "type": "string",
+              "minLength": 3,
+              "maxLength": 500
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Erased; the log entry.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Deletion"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "503": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "x-openasy-role": "admin"
+      }
+    },
+    "/api/v1/deletions": {
+      "get": {
+        "operationId": "listDeletions",
+        "tags": [
+          "People"
+        ],
+        "summary": "Erasures",
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "apiToken": []
+          },
+          {
+            "adminToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "description": "From nextCursor of the page before.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "1 to 500; 100 by default.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Newest first. Nobody can change or remove an entry.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeletionList"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "503": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "description": "Needs the admin role.",
+        "x-openasy-role": "admin"
+      }
+    },
+    "/api/v1/purposes": {
+      "get": {
+        "operationId": "listPurposes",
+        "tags": [
+          "Purposes"
+        ],
+        "summary": "Purposes",
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "apiToken": []
+          },
+          {
+            "adminToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "As the file sets them, with how many agreed to each version.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PurposeList"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "503": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "description": "Needs the viewer role.",
+        "x-openasy-role": "viewer"
+      }
+    },
+    "/api/v1/purposes/{id}/versions/{version}": {
+      "get": {
+        "operationId": "getText",
+        "tags": [
+          "Purposes"
+        ],
+        "summary": "A version's text",
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "apiToken": []
+          },
+          {
+            "adminToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "version",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "As it was first applied, also when it is no longer in the file.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Text"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "503": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "description": "Needs the viewer role.",
+        "x-openasy-role": "viewer"
+      }
+    },
+    "/api/v1/sites": {
+      "get": {
+        "operationId": "listSites",
+        "tags": [
+          "Purposes"
+        ],
+        "summary": "Sites",
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "apiToken": []
+          },
+          {
+            "adminToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The sites that show the banner, as the file sets them, with their script tag and preference page.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiteList"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "503": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "description": "Needs the viewer role.",
+        "x-openasy-role": "viewer"
+      }
+    },
+    "/api/v1/iys": {
+      "get": {
+        "operationId": "iysStatus",
+        "tags": [
+          "İYS"
+        ],
+        "summary": "İYS sync",
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "apiToken": []
+          },
+          {
+            "adminToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Whether İYS is set and connected, and what is waiting for it.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IysStatus"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "503": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "description": "Needs the viewer role.",
+        "x-openasy-role": "viewer"
+      }
+    },
+    "/api/v1/iys/outbox": {
+      "get": {
+        "operationId": "iysOutbox",
+        "tags": [
+          "İYS"
+        ],
+        "summary": "Answers for İYS",
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "apiToken": []
+          },
+          {
+            "adminToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "state",
+            "in": "query",
+            "required": false,
+            "description": "pending, sent or failed.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "sent",
+                "failed"
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "description": "1 to 500; 100 by default.",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Newest first.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OutboxList"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "503": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "description": "Needs the viewer role.",
+        "x-openasy-role": "viewer"
+      }
+    },
+    "/api/v1/iys/sync": {
+      "post": {
+        "operationId": "iysSync",
+        "tags": [
+          "İYS"
+        ],
+        "summary": "Sync with İYS now",
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "apiToken": []
+          },
+          {
+            "adminToken": []
+          }
+        ],
+        "description": "Sends what is due and reads İYS's changes now, without waiting for the next round. Needs the admin role.",
+        "responses": {
+          "200": {
+            "description": "What was read, and the state after.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SyncResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "503": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "x-openasy-role": "admin"
+      }
+    },
+    "/api/v1/iys/retry": {
+      "post": {
+        "operationId": "iysRetry",
+        "tags": [
+          "İYS"
+        ],
+        "summary": "Send failed answers again",
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "apiToken": []
+          },
+          {
+            "adminToken": []
+          }
+        ],
+        "description": "After fixing what İYS refused, such as the brand code in the file. Needs the admin role.",
+        "responses": {
+          "200": {
+            "description": "How many go out again.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Retried"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "503": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "x-openasy-role": "admin"
+      }
+    },
+    "/api/v1/iys/lookup": {
+      "get": {
+        "operationId": "iysLookup",
+        "tags": [
+          "İYS"
+        ],
+        "summary": "Ask İYS for a recipient",
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "apiToken": []
+          },
+          {
+            "adminToken": []
+          }
+        ],
+        "description": "What İYS itself holds for an email address or phone number on a channel, asked now. Needs the admin role.",
+        "parameters": [
+          {
+            "name": "channel",
+            "in": "query",
+            "required": true,
+            "description": "email, sms or call.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "email",
+                "sms",
+                "call"
+              ]
+            }
+          },
+          {
+            "name": "email",
+            "in": "query",
+            "required": false,
+            "description": "The person's email address.",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 254
+            }
+          },
+          {
+            "name": "phone",
+            "in": "query",
+            "required": false,
+            "description": "The person's phone number, such as +905551112233.",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 254
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "İYS's answer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Lookup"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "502": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "503": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "x-openasy-role": "admin"
+      }
+    },
+    "/api/v1/choices": {
+      "get": {
+        "operationId": "getChoices",
+        "tags": [
+          "Banner"
+        ],
+        "summary": "What the banner and the preference page show",
+        "description": "The site's purposes in the page's language, with this browser's answers; with a preference link's token, also the message purposes of the person it names. Called by the site's script.",
+        "security": [],
+        "parameters": [
+          {
+            "name": "site",
+            "in": "query",
+            "required": true,
+            "description": "The site's name in the file.",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 254
+            }
+          },
+          {
+            "name": "browser",
+            "in": "query",
+            "required": false,
+            "description": "The banner's browser id.",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 254
+            }
+          },
+          {
+            "name": "token",
+            "in": "query",
+            "required": false,
+            "description": "A preference link's token.",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "lang",
+            "in": "query",
+            "required": false,
+            "description": "en, tr or de.",
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 254
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The purposes and answers.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Choices"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      },
+      "post": {
+        "operationId": "answerChoices",
+        "tags": [
+          "Banner"
+        ],
+        "summary": "Answers from the banner or the preference page",
+        "description": "Sent as text/plain so the page needs no preflight; the Origin must be one of the site's domains or Consent's own. Only answers that change something are recorded. Message purposes need a preference link's token.",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "text/plain": {
+              "schema": {
+                "$ref": "#/components/schemas/ChoicesRequest"
+              }
+            },
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChoicesRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "How many answers were recorded.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChoicesRecorded"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "413": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/c/{site}.js": {
+      "get": {
+        "operationId": "script",
+        "tags": [
+          "Banner"
+        ],
+        "summary": "The site's script",
+        "description": "The banner and the preference panel from one script tag: `<script src=\".../c/shop.js\"></script>`. It carries the site's purposes and texts from the file and may be cached for five minutes.",
+        "security": [],
+        "parameters": [
+          {
+            "name": "site",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z0-9-]{1,32}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The script.",
+            "content": {
+              "text/javascript": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No site of that name in the file; a comment that says so.",
+            "content": {
+              "text/javascript": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The banner is not built into this image.",
+            "content": {
+              "text/javascript": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/preferences/{site}": {
+      "get": {
+        "operationId": "preferencePage",
+        "tags": [
+          "Banner"
+        ],
+        "summary": "The preference page",
+        "description": "Consent's own page for a site, where a preference link (`?t=`) leads: the site's script, drawn in full.",
+        "security": [],
+        "parameters": [
+          {
+            "name": "site",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z0-9-]{1,32}$"
+            }
+          },
+          {
+            "name": "t",
+            "in": "query",
+            "required": false,
+            "description": "A preference link's token.",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The page.",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem"
+          }
+        }
+      }
+    },
+    "/api/v1/summary": {
+      "get": {
+        "operationId": "summary",
+        "tags": [
+          "Product"
+        ],
+        "summary": "Overview",
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "apiToken": []
+          },
+          {
+            "adminToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "People, answers and İYS at a glance.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Summary"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "503": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "description": "Needs the viewer role.",
+        "x-openasy-role": "viewer"
+      }
+    },
+    "/api/v1/products": {
+      "get": {
+        "operationId": "listProducts",
+        "tags": [
+          "Product"
+        ],
+        "summary": "Other products of this install",
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "apiToken": []
+          },
+          {
+            "adminToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "From OPENASY_PRODUCTS, for the product switcher.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProductList"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem"
+          },
+          "503": {
+            "$ref": "#/components/responses/Problem"
+          }
+        },
+        "description": "Needs the viewer role.",
+        "x-openasy-role": "viewer"
+      }
+    },
+    "/api/v1/version": {
+      "get": {
+        "operationId": "version",
+        "tags": [
+          "Product"
+        ],
+        "summary": "Product and version",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "This product and its version.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Version"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/healthz": {
+      "get": {
+        "operationId": "liveness",
+        "tags": [
+          "Product"
+        ],
+        "summary": "Liveness",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "The process is running.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/readyz": {
+      "get": {
+        "operationId": "readiness",
+        "tags": [
+          "Product"
+        ],
+        "summary": "Readiness",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "The database answers.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The database does not answer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Status"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/metrics": {
+      "get": {
+        "operationId": "metrics",
+        "tags": [
+          "Product"
+        ],
+        "summary": "Prometheus metrics",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Metrics in the Prometheus text format.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "session": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "__Host-openasy-session",
+        "description": "The browser session after signing in (`openasy-session` when Consent runs on plain http://localhost). Requests that change something must come from the Consent origin."
+      },
+      "apiToken": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "An API token created under Settings, API tokens (`oa_consent_...`): one role, always an expiry (ADR 0003)."
+      },
+      "adminToken": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "Only when Consent is started by its tests or a local script: one shared token with the admin role. A production install does not have it."
+      }
+    },
+    "responses": {
+      "Problem": {
+        "description": "An error, as RFC 9457 Problem Details.",
+        "content": {
+          "application/problem+json": {
+            "schema": {
+              "$ref": "#/components/schemas/Problem"
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "Problem": {
+        "type": "object",
+        "required": [
+          "type",
+          "title",
+          "status",
+          "code"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "format": "uri"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "integer"
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "invalid-token",
+              "invalid-json",
+              "invalid-body",
+              "forbidden-origin",
+              "not-found",
+              "conflict",
+              "not-configured",
+              "rate-limited",
+              "payload-too-large",
+              "upstream-error",
+              "internal-error",
+              "unauthenticated",
+              "invalid-credentials",
+              "mfa-required",
+              "mfa-setup-required",
+              "forbidden",
+              "cross-site"
+            ],
+            "description": "Stable; match on this."
+          },
+          "detail": {
+            "type": "string"
+          }
+        }
+      },
+      "Status": {
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "type": "string"
+          }
+        }
+      },
+      "Version": {
+        "type": "object",
+        "required": [
+          "product",
+          "version"
+        ],
+        "properties": {
+          "product": {
+            "const": "consent"
+          },
+          "version": {
+            "type": "string"
+          }
+        }
+      },
+      "ProductList": {
+        "type": "object",
+        "required": [
+          "products"
+        ],
+        "properties": {
+          "products": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "url"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "url": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "ConfigFile": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "required": [
+          "path",
+          "appliedAt",
+          "purposes",
+          "sites",
+          "error",
+          "warnings"
+        ],
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "appliedAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "purposes": {
+            "type": "integer"
+          },
+          "sites": {
+            "type": "integer"
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "description": "The file and whether it is applied; null before it was first read."
+      },
+      "IysStatus": {
+        "type": "object",
+        "required": [
+          "configured",
+          "connected",
+          "account",
+          "brand",
+          "url",
+          "pullMinutes",
+          "credentials",
+          "pending",
+          "failed",
+          "sent",
+          "lastSendAt",
+          "lastPullAt",
+          "error"
+        ],
+        "properties": {
+          "configured": {
+            "type": "boolean"
+          },
+          "connected": {
+            "type": "boolean",
+            "description": "The file sets iys and both its environment variables are set."
+          },
+          "account": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "brand": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "url": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "pullMinutes": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "credentials": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "required": [
+              "username",
+              "password"
+            ],
+            "properties": {
+              "username": {
+                "type": "object",
+                "required": [
+                  "variable",
+                  "set"
+                ],
+                "properties": {
+                  "variable": {
+                    "type": "string"
+                  },
+                  "set": {
+                    "type": "boolean"
+                  }
+                }
+              },
+              "password": {
+                "type": "object",
+                "required": [
+                  "variable",
+                  "set"
+                ],
+                "properties": {
+                  "variable": {
+                    "type": "string"
+                  },
+                  "set": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          },
+          "pending": {
+            "type": "integer"
+          },
+          "failed": {
+            "type": "integer"
+          },
+          "sent": {
+            "type": "integer"
+          },
+          "lastSendAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "lastPullAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "Summary": {
+        "type": "object",
+        "required": [
+          "purposes",
+          "sites",
+          "people",
+          "answers",
+          "granted24h",
+          "withdrawn24h",
+          "deletions",
+          "file",
+          "iys"
+        ],
+        "properties": {
+          "purposes": {
+            "type": "integer"
+          },
+          "sites": {
+            "type": "integer"
+          },
+          "people": {
+            "type": "integer"
+          },
+          "answers": {
+            "type": "integer"
+          },
+          "granted24h": {
+            "type": "integer"
+          },
+          "withdrawn24h": {
+            "type": "integer"
+          },
+          "deletions": {
+            "type": "integer"
+          },
+          "file": {
+            "$ref": "#/components/schemas/ConfigFile"
+          },
+          "iys": {
+            "$ref": "#/components/schemas/IysStatus"
+          }
+        }
+      },
+      "Purpose": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "channels",
+          "required",
+          "iys",
+          "current",
+          "versions",
+          "byChannel",
+          "sites"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "properties": {
+                  "en": {
+                    "type": "string"
+                  },
+                  "tr": {
+                    "type": "string"
+                  },
+                  "de": {
+                    "type": "string"
+                  }
+                }
+              }
+            ]
+          },
+          "channels": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "email",
+                "sms",
+                "call",
+                "web"
+              ]
+            }
+          },
+          "required": {
+            "type": "boolean"
+          },
+          "iys": {
+            "type": "boolean",
+            "description": "Answers on its email, SMS and call channels are kept in step with İYS."
+          },
+          "current": {
+            "type": "integer",
+            "description": "The version people are asked now."
+          },
+          "versions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "version",
+                "text",
+                "from",
+                "renew",
+                "granted"
+              ],
+              "properties": {
+                "version": {
+                  "type": "integer"
+                },
+                "text": {
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      },
+                      "properties": {
+                        "en": {
+                          "type": "string"
+                        },
+                        "tr": {
+                          "type": "string"
+                        },
+                        "de": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "from": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "When it came into force: from in the file, or the day it was first applied."
+                },
+                "renew": {
+                  "type": "boolean"
+                },
+                "granted": {
+                  "type": "integer",
+                  "description": "People whose latest answer is yes to this version."
+                }
+              }
+            }
+          },
+          "byChannel": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "channel",
+                "granted",
+                "renew",
+                "withdrawn"
+              ],
+              "properties": {
+                "channel": {
+                  "type": "string",
+                  "enum": [
+                    "email",
+                    "sms",
+                    "call",
+                    "web"
+                  ]
+                },
+                "granted": {
+                  "type": "integer"
+                },
+                "renew": {
+                  "type": "integer",
+                  "description": "Yes to a version the file has since asked again for."
+                },
+                "withdrawn": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "sites": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "PurposeList": {
+        "type": "object",
+        "required": [
+          "purposes",
+          "file"
+        ],
+        "properties": {
+          "purposes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Purpose"
+            }
+          },
+          "file": {
+            "$ref": "#/components/schemas/ConfigFile"
+          }
+        }
+      },
+      "Text": {
+        "type": "object",
+        "required": [
+          "purpose",
+          "version",
+          "text"
+        ],
+        "properties": {
+          "purpose": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          },
+          "text": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "properties": {
+                  "en": {
+                    "type": "string"
+                  },
+                  "tr": {
+                    "type": "string"
+                  },
+                  "de": {
+                    "type": "string"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "Site": {
+        "type": "object",
+        "required": [
+          "name",
+          "domains",
+          "banner",
+          "preferences",
+          "analytics",
+          "privacy",
+          "language",
+          "script",
+          "preferencePage",
+          "answers30d"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "domains": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "banner": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "preferences": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "analytics": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "privacy": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "language": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "script": {
+            "type": "string"
+          },
+          "preferencePage": {
+            "type": "string"
+          },
+          "answers30d": {
+            "type": "object",
+            "required": [
+              "granted",
+              "withdrawn"
+            ],
+            "properties": {
+              "granted": {
+                "type": "integer"
+              },
+              "withdrawn": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "SiteList": {
+        "type": "object",
+        "required": [
+          "sites"
+        ],
+        "properties": {
+          "sites": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Site"
+            }
+          }
+        }
+      },
+      "Who": {
+        "type": "object",
+        "minProperties": 1,
+        "additionalProperties": false,
+        "description": "One or more ways the person is known. Emails are lowercased, phone numbers written as +905551112233.",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "id": {
+            "type": "string"
+          },
+          "browser": {
+            "type": "string"
+          },
+          "person": {
+            "type": "string"
+          }
+        }
+      },
+      "Standing": {
+        "type": "object",
+        "required": [
+          "purpose",
+          "channel",
+          "status",
+          "allowed",
+          "version",
+          "current",
+          "at",
+          "source"
+        ],
+        "properties": {
+          "purpose": {
+            "type": "string"
+          },
+          "channel": {
+            "type": "string",
+            "enum": [
+              "email",
+              "sms",
+              "call",
+              "web"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "granted",
+              "withdrawn",
+              "renew",
+              "none"
+            ],
+            "description": "granted: the latest answer is yes; withdrawn: no; renew: yes, to a text the file has since asked again for; none: never answered."
+          },
+          "allowed": {
+            "type": "boolean",
+            "description": "Whether the person may be reached on this channel for this purpose now."
+          },
+          "version": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "current": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "at": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "source": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "CheckResult": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Standing"
+          },
+          {
+            "type": "object",
+            "required": [
+              "person"
+            ],
+            "properties": {
+              "person": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "Null when nobody is known by these identifiers, or they name two people."
+              }
+            }
+          }
+        ]
+      },
+      "CheckRequest": {
+        "type": "object",
+        "required": [
+          "purpose",
+          "channel",
+          "people"
+        ],
+        "properties": {
+          "purpose": {
+            "type": "string"
+          },
+          "channel": {
+            "type": "string",
+            "enum": [
+              "email",
+              "sms",
+              "call",
+              "web"
+            ]
+          },
+          "people": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 1000,
+            "items": {
+              "$ref": "#/components/schemas/Who"
+            }
+          }
+        }
+      },
+      "CheckList": {
+        "type": "object",
+        "required": [
+          "purpose",
+          "channel",
+          "results"
+        ],
+        "properties": {
+          "purpose": {
+            "type": "string"
+          },
+          "channel": {
+            "type": "string",
+            "enum": [
+              "email",
+              "sms",
+              "call",
+              "web"
+            ]
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CheckResult"
+            }
+          }
+        }
+      },
+      "AnswerInput": {
+        "type": "object",
+        "required": [
+          "purpose",
+          "channel",
+          "granted"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "purpose": {
+            "type": "string"
+          },
+          "channel": {
+            "type": "string",
+            "enum": [
+              "email",
+              "sms",
+              "call",
+              "web"
+            ]
+          },
+          "granted": {
+            "type": "boolean"
+          },
+          "version": {
+            "type": "integer",
+            "description": "The version of the text the person saw; by default the one in force at `at`."
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When they answered; now by default. Never in the future."
+          },
+          "iysSource": {
+            "type": "string",
+            "description": "Where İYS is told it was given, such as HS_CAGRI_MERKEZI; the file's iys.source by default."
+          },
+          "proof": {
+            "type": "string",
+            "maxLength": 500,
+            "description": "What shows the answer was given: a form's name, a call's reference."
+          }
+        }
+      },
+      "RecordRequest": {
+        "type": "object",
+        "required": [
+          "person",
+          "answers"
+        ],
+        "properties": {
+          "person": {
+            "$ref": "#/components/schemas/Who"
+          },
+          "answers": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 100,
+            "items": {
+              "$ref": "#/components/schemas/AnswerInput"
+            }
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "api",
+              "form",
+              "import"
+            ],
+            "default": "api"
+          },
+          "via": {
+            "type": "string",
+            "maxLength": 128,
+            "description": "Where the answers came from, such as forms/newsletter."
+          }
+        }
+      },
+      "Answer": {
+        "type": "object",
+        "required": [
+          "id",
+          "person",
+          "purpose",
+          "channel",
+          "version",
+          "granted",
+          "at",
+          "recordedAt",
+          "source",
+          "via",
+          "actor",
+          "iysSource",
+          "proof"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "person": {
+            "type": "string"
+          },
+          "purpose": {
+            "type": "string"
+          },
+          "channel": {
+            "type": "string",
+            "enum": [
+              "email",
+              "sms",
+              "call",
+              "web"
+            ]
+          },
+          "version": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "granted": {
+            "type": "boolean"
+          },
+          "at": {
+            "type": "string"
+          },
+          "recordedAt": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "banner",
+              "preferences",
+              "api",
+              "form",
+              "import",
+              "iys"
+            ]
+          },
+          "via": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "actor": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Who recorded it: a member's email or token:<name>."
+          },
+          "iysSource": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "proof": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "Recorded": {
+        "type": "object",
+        "required": [
+          "person",
+          "answers",
+          "standing"
+        ],
+        "properties": {
+          "person": {
+            "type": "string"
+          },
+          "answers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Answer"
+            }
+          },
+          "standing": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Standing"
+            }
+          }
+        }
+      },
+      "PersonSummary": {
+        "type": "object",
+        "required": [
+          "id",
+          "createdAt",
+          "emails",
+          "phones",
+          "ids",
+          "browsers",
+          "granted",
+          "withdrawn",
+          "lastAnswerAt",
+          "latest",
+          "conflict"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "emails": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "phones": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "browsers": {
+            "type": "integer"
+          },
+          "granted": {
+            "type": "integer"
+          },
+          "withdrawn": {
+            "type": "integer"
+          },
+          "lastAnswerAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "latest": {
+            "type": "array",
+            "description": "The latest answer on each purpose and channel the person answered.",
+            "items": {
+              "type": "object",
+              "required": [
+                "purpose",
+                "channel",
+                "version",
+                "granted",
+                "at",
+                "source"
+              ],
+              "properties": {
+                "purpose": {
+                  "type": "string"
+                },
+                "channel": {
+                  "type": "string",
+                  "enum": [
+                    "email",
+                    "sms",
+                    "call",
+                    "web"
+                  ]
+                },
+                "version": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "granted": {
+                  "type": "boolean"
+                },
+                "at": {
+                  "type": "string"
+                },
+                "source": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "conflict": {
+            "type": "boolean",
+            "description": "İYS and the record disagree on at least one channel."
+          }
+        }
+      },
+      "Conflict": {
+        "type": "object",
+        "required": [
+          "purpose",
+          "channel",
+          "local",
+          "iys",
+          "counts"
+        ],
+        "properties": {
+          "purpose": {
+            "type": "string"
+          },
+          "channel": {
+            "type": "string",
+            "enum": [
+              "email",
+              "sms",
+              "call",
+              "web"
+            ]
+          },
+          "local": {
+            "type": "object",
+            "required": [
+              "granted",
+              "at",
+              "source"
+            ],
+            "properties": {
+              "granted": {
+                "type": "boolean"
+              },
+              "at": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string"
+              }
+            }
+          },
+          "iys": {
+            "type": "object",
+            "required": [
+              "granted",
+              "at",
+              "source"
+            ],
+            "properties": {
+              "granted": {
+                "type": "boolean"
+              },
+              "at": {
+                "type": "string"
+              },
+              "source": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            }
+          },
+          "counts": {
+            "type": "string",
+            "enum": [
+              "local",
+              "iys"
+            ],
+            "description": "The later of the two, which decides."
+          }
+        }
+      },
+      "ConflictList": {
+        "type": "object",
+        "required": [
+          "conflicts"
+        ],
+        "properties": {
+          "conflicts": {
+            "type": "array",
+            "items": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Conflict"
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "person",
+                    "about"
+                  ],
+                  "properties": {
+                    "person": {
+                      "type": "string"
+                    },
+                    "about": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "IysLog": {
+        "type": "object",
+        "required": [
+          "log"
+        ],
+        "properties": {
+          "log": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "direction",
+                "at",
+                "recipient",
+                "type",
+                "status",
+                "state",
+                "note",
+                "person"
+              ],
+              "properties": {
+                "direction": {
+                  "type": "string",
+                  "enum": [
+                    "out",
+                    "in"
+                  ]
+                },
+                "at": {
+                  "type": "string"
+                },
+                "recipient": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "state": {
+                  "type": "string",
+                  "enum": [
+                    "pending",
+                    "sent",
+                    "failed"
+                  ]
+                },
+                "note": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "person": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "Activity": {
+        "type": "object",
+        "required": [
+          "days",
+          "from",
+          "series",
+          "sources",
+          "recent",
+          "reach"
+        ],
+        "properties": {
+          "days": {
+            "type": "integer"
+          },
+          "from": {
+            "type": "string"
+          },
+          "series": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "day",
+                "granted",
+                "withdrawn"
+              ],
+              "properties": {
+                "day": {
+                  "type": "string"
+                },
+                "granted": {
+                  "type": "integer"
+                },
+                "withdrawn": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "source",
+                "granted",
+                "withdrawn"
+              ],
+              "properties": {
+                "source": {
+                  "type": "string"
+                },
+                "granted": {
+                  "type": "integer"
+                },
+                "withdrawn": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "recent": {
+            "type": "array",
+            "items": {
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Answer"
+                },
+                {
+                  "type": "object",
+                  "required": [
+                    "about"
+                  ],
+                  "properties": {
+                    "about": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "reach": {
+            "type": "array",
+            "description": "People who may be reached now, by purpose and channel.",
+            "items": {
+              "type": "object",
+              "required": [
+                "purpose",
+                "channel",
+                "granted"
+              ],
+              "properties": {
+                "purpose": {
+                  "type": "string"
+                },
+                "channel": {
+                  "type": "string",
+                  "enum": [
+                    "email",
+                    "sms",
+                    "call",
+                    "web"
+                  ]
+                },
+                "granted": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      },
+      "Checks": {
+        "type": "object",
+        "required": [
+          "recent",
+          "today"
+        ],
+        "properties": {
+          "recent": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "at",
+                "actor",
+                "purpose",
+                "channel",
+                "about",
+                "allowed",
+                "status",
+                "version",
+                "since",
+                "source"
+              ],
+              "properties": {
+                "at": {
+                  "type": "string"
+                },
+                "actor": {
+                  "type": "string"
+                },
+                "purpose": {
+                  "type": "string"
+                },
+                "channel": {
+                  "type": "string",
+                  "enum": [
+                    "email",
+                    "sms",
+                    "call",
+                    "web"
+                  ]
+                },
+                "about": {
+                  "type": "string"
+                },
+                "allowed": {
+                  "type": "boolean"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "since": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "source": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          },
+          "today": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "actor",
+                "asked",
+                "no"
+              ],
+              "properties": {
+                "actor": {
+                  "type": "string"
+                },
+                "asked": {
+                  "type": "integer"
+                },
+                "no": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        }
+      },
+      "PersonList": {
+        "type": "object",
+        "required": [
+          "people"
+        ],
+        "properties": {
+          "people": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PersonSummary"
+            }
+          },
+          "nextCursor": {
+            "type": "string"
+          }
+        }
+      },
+      "Outbox": {
+        "type": "object",
+        "required": [
+          "id",
+          "answer",
+          "recipient",
+          "type",
+          "status",
+          "source",
+          "consentDate",
+          "state",
+          "attempts",
+          "error",
+          "transactionId",
+          "sentAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "answer": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
+          "recipient": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "EPOSTA",
+              "MESAJ",
+              "ARAMA"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ONAY",
+              "RET"
+            ]
+          },
+          "source": {
+            "type": "string"
+          },
+          "consentDate": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "sent",
+              "failed"
+            ]
+          },
+          "attempts": {
+            "type": "integer"
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "transactionId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "sentAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "OutboxList": {
+        "type": "object",
+        "required": [
+          "outbox"
+        ],
+        "properties": {
+          "outbox": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Outbox"
+            }
+          }
+        }
+      },
+      "Person": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PersonSummary"
+          },
+          {
+            "type": "object",
+            "required": [
+              "standing",
+              "conflicts",
+              "history",
+              "iys"
+            ],
+            "properties": {
+              "standing": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Standing"
+                }
+              },
+              "conflicts": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Conflict"
+                }
+              },
+              "history": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Answer"
+                }
+              },
+              "iys": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Outbox"
+                }
+              }
+            }
+          }
+        ]
+      },
+      "Deletion": {
+        "type": "object",
+        "required": [
+          "id",
+          "person",
+          "at",
+          "actor",
+          "reason",
+          "answers",
+          "identifiers",
+          "iysRefusals"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "person": {
+            "type": "string"
+          },
+          "at": {
+            "type": "string"
+          },
+          "actor": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "answers": {
+            "type": "integer"
+          },
+          "identifiers": {
+            "type": "integer"
+          },
+          "iysRefusals": {
+            "type": "integer",
+            "description": "Refusals sent to İYS for the channels the person had said yes to."
+          }
+        }
+      },
+      "DeletionList": {
+        "type": "object",
+        "required": [
+          "deletions"
+        ],
+        "properties": {
+          "deletions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Deletion"
+            }
+          },
+          "nextCursor": {
+            "type": "string"
+          }
+        }
+      },
+      "LinkRequest": {
+        "type": "object",
+        "required": [
+          "person",
+          "site"
+        ],
+        "properties": {
+          "person": {
+            "$ref": "#/components/schemas/Who"
+          },
+          "site": {
+            "type": "string"
+          },
+          "days": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 730,
+            "default": 180
+          }
+        }
+      },
+      "Link": {
+        "type": "object",
+        "required": [
+          "url",
+          "token",
+          "expiresAt"
+        ],
+        "properties": {
+          "url": {
+            "type": "string"
+          },
+          "token": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string"
+          }
+        }
+      },
+      "SyncResult": {
+        "type": "object",
+        "required": [
+          "read",
+          "status"
+        ],
+        "properties": {
+          "read": {
+            "type": "object",
+            "required": [
+              "recorded",
+              "known",
+              "skipped"
+            ],
+            "properties": {
+              "recorded": {
+                "type": "integer"
+              },
+              "known": {
+                "type": "integer"
+              },
+              "skipped": {
+                "type": "integer"
+              }
+            }
+          },
+          "status": {
+            "$ref": "#/components/schemas/IysStatus"
+          }
+        }
+      },
+      "Retried": {
+        "type": "object",
+        "required": [
+          "retried"
+        ],
+        "properties": {
+          "retried": {
+            "type": "integer"
+          }
+        }
+      },
+      "Lookup": {
+        "type": "object",
+        "required": [
+          "recipient",
+          "channel",
+          "found",
+          "status",
+          "source",
+          "consentDate",
+          "creationDate",
+          "transactionId"
+        ],
+        "properties": {
+          "recipient": {
+            "type": "string"
+          },
+          "channel": {
+            "type": "string"
+          },
+          "found": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "enum": [
+              "ONAY",
+              "RET",
+              null
+            ]
+          },
+          "source": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "consentDate": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "creationDate": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "transactionId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
+      "Choices": {
+        "type": "object",
+        "required": [
+          "site",
+          "language",
+          "privacy",
+          "person",
+          "purposes"
+        ],
+        "properties": {
+          "site": {
+            "type": "string"
+          },
+          "language": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "privacy": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "person": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "required": [
+              "emails",
+              "phones"
+            ],
+            "properties": {
+              "emails": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "phones": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "purposes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "name",
+                "text",
+                "version",
+                "required",
+                "channels"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "text": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "integer"
+                },
+                "required": {
+                  "type": "boolean"
+                },
+                "channels": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "channel",
+                      "status",
+                      "allowed",
+                      "version",
+                      "at"
+                    ],
+                    "properties": {
+                      "channel": {
+                        "type": "string",
+                        "enum": [
+                          "email",
+                          "sms",
+                          "call",
+                          "web"
+                        ]
+                      },
+                      "status": {
+                        "type": "string"
+                      },
+                      "allowed": {
+                        "type": "boolean"
+                      },
+                      "version": {
+                        "type": [
+                          "integer",
+                          "null"
+                        ]
+                      },
+                      "at": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "ChoicesRequest": {
+        "type": "object",
+        "required": [
+          "site",
+          "browser",
+          "answers"
+        ],
+        "properties": {
+          "site": {
+            "type": "string"
+          },
+          "browser": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{8,64}$"
+          },
+          "token": {
+            "type": "string",
+            "description": "A preference link's token; needed for message purposes."
+          },
+          "from": {
+            "type": "string",
+            "enum": [
+              "banner",
+              "preferences"
+            ],
+            "default": "banner"
+          },
+          "answers": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 50,
+            "items": {
+              "type": "object",
+              "required": [
+                "purpose",
+                "granted"
+              ],
+              "properties": {
+                "purpose": {
+                  "type": "string"
+                },
+                "granted": {
+                  "type": "boolean"
+                },
+                "version": {
+                  "type": "integer"
+                },
+                "channel": {
+                  "type": "string",
+                  "enum": [
+                    "email",
+                    "sms",
+                    "call",
+                    "web"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "ChoicesRecorded": {
+        "type": "object",
+        "required": [
+          "recorded"
+        ],
+        "properties": {
+          "recorded": {
+            "type": "integer"
+          }
+        }
+      }
+    }
+  }
+}

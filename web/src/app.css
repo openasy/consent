@@ -1,0 +1,17 @@
+/* The few layouts this product needs that @openasy/ui's prebuilt styles do not include. Colours stay in the library's tokens. */
+
+/* Emails, phone numbers and addresses break anywhere rather than widening their column. */
+.consent-wrap {
+  overflow-wrap: anywhere;
+}
+
+/* A purpose's text keeps the lines the file gave it. */
+.consent-text {
+  white-space: pre-line;
+}
+
+.consent-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
