@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "OpenAsy Consent API",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "summary": "Who agreed to what, on which channel and to which text, with İYS kept in step.",
     "description": "Every screen of Consent uses this API, and so can your scripts and the other products (ADR 0014). Within `/api/v1` changes are additive only; anything removed is deprecated first (ADR 0024). Errors use Problem Details (RFC 9457).\n\nPurposes, their texts and the sites are set in the product's file, never through the API. The site's script at `/c/<site>.js` reads and sends `/api/v1/choices`. Everything else takes the session of a signed-in person or an API token, and each operation names the role it needs (`x-openasy-role`: viewer, editor, admin; ADR 0003).\n\nSign-in, members and API tokens are under `/api/v1/auth`, provided by [@openasy/auth](https://github.com/openasy/auth#routes).",
     "license": {

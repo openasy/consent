@@ -1,6 +1,6 @@
 {
   "name": "@openasy/consent",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "description": "OpenAsy Consent: who agreed to what, on which channel and to which text, with İYS kept in step, a cookie banner and a preference page.",
   "license": "AGPL-3.0-only",
