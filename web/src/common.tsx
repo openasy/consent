@@ -3,7 +3,7 @@ import { StatusBadge, useLocalePreference } from "@openasy/ui";
 import { useAuth } from "@openasy/auth/react";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { api, MfaSetupRequired, Unauthorized, type Channel, type Purpose, type Source, type Text } from "./api.ts";
-import { useT, type T } from "./i18n.ts";
+import { useT, type T, viewerLocale } from "./i18n.ts";
 
 /** Data loading with the session; when it ends, the sign-in screen comes back. */
 export function useApi() {
@@ -62,9 +62,9 @@ export function purposeName(purposes: Purpose[], id: string, text: (t: Text) => 
   return p ? text(p.name) : id;
 }
 
-export const fmt = (n: number) => n.toLocaleString();
-export const time = (iso: string | null) => (iso ? new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" }) : "–");
-export const shortDay = (d: string) => new Date(`${d}T00:00:00Z`).toLocaleDateString(undefined, { month: "short", day: "numeric", timeZone: "UTC" });
+export const fmt = (n: number) => n.toLocaleString(viewerLocale());
+export const time = (iso: string | null) => (iso ? new Date(iso).toLocaleString(viewerLocale(), { dateStyle: "medium", timeStyle: "short" }) : "–");
+export const shortDay = (d: string) => new Date(`${d}T00:00:00Z`).toLocaleDateString(viewerLocale(), { month: "short", day: "numeric", timeZone: "UTC" });
 
 /** The latest answer: yes or no, and the version of the text it was given to. */
 export function AnswerBadge({ granted, version, status }: { granted?: boolean | null; version?: number | null; status?: string }) {

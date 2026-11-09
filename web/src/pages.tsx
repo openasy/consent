@@ -76,7 +76,7 @@ export function PurposesPage({ purposes, sites }: { purposes: Purpose[]; sites: 
                   type="button"
                   onClick={() => (setId(x.id), setPicked(null))}
                   aria-current={x.id === p.id ? "true" : undefined}
-                  className={`flex w-full flex-col px-3 py-1.5 text-left ${x.id === p.id ? "bg-accent-soft text-accent-text" : "text-fg hover:bg-canvas"}`}
+                  className={`flex w-full flex-col px-3 py-1.5 text-start ${x.id === p.id ? "bg-accent-soft text-accent-text" : "text-fg hover:bg-canvas"}`}
                 >
                   <span className="truncate text-sm font-medium">{text(x.name)}</span>
                   <span className="text-2xs text-fg-muted">
@@ -112,7 +112,7 @@ export function PurposesPage({ purposes, sites }: { purposes: Purpose[]; sites: 
                     options={newest.slice(0, 6).map((x) => ({ value: String(x.version), label: `v${x.version}` }))}
                   />
                 )}
-                <blockquote className="consent-text max-w-[68ch] border-l-2 border-accent pl-3 text-sm leading-relaxed text-fg">{text(v.text)}</blockquote>
+                <blockquote className="consent-text max-w-[68ch] border-s-2 border-accent ps-3 text-sm leading-relaxed text-fg">{text(v.text)}</blockquote>
                 <p className="text-xs text-fg-muted">{t("purposes.versionDetail", { version: v.version, from: v.from ?? "–", count: v.granted })}</p>
               </div>
             </Panel>

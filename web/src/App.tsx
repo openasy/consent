@@ -35,7 +35,7 @@ import { Cookie, FileDown, KeyRound, LayoutDashboard, ListChecks, LogIn, LogOut,
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Activity, Channel, Person, PersonSummary, ProductLink, Purpose, Site, Summary } from "./api.ts";
 import { AnswerBadge, channelName, fmt, purposeName, shortDay, sourceName, time, useApi, useLoad, useText, type Call } from "./common.tsx";
-import { useT } from "./i18n.ts";
+import { useT, setViewerLocale } from "./i18n.ts";
 import { ChecksPage, IysPage, PurposesPage, SetupPage, SitesPage } from "./pages.tsx";
 import { search } from "./search.ts";
 
@@ -360,12 +360,12 @@ function PersonPanel({
       <div className="flex flex-col gap-3">
         {byPurpose.length ? (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+            <table className="w-full text-start text-xs">
               <caption className="sr-only">{t("person.latest")}</caption>
               <thead className="text-fg-muted">
                 <tr>
-                  <th className="py-1 pr-2 font-semibold">{t("person.purpose")}</th>
-                  <th className="py-1 pr-2 font-semibold">{t("person.channel")}</th>
+                  <th className="py-1 pe-2 font-semibold">{t("person.purpose")}</th>
+                  <th className="py-1 pe-2 font-semibold">{t("person.channel")}</th>
                   <th className="py-1 font-semibold">{t("person.latestAnswer")}</th>
                 </tr>
               </thead>
@@ -375,8 +375,8 @@ function PersonPanel({
                     .filter((s) => s.purpose === pid)
                     .map((s, i) => (
                       <tr key={`${s.purpose}-${s.channel}`} className={i === 0 ? "border-t border-line" : undefined}>
-                        <td className="py-1 pr-2 align-top">{i === 0 ? purposeName(purposes, s.purpose, text) : ""}</td>
-                        <td className="py-1 pr-2 align-top">{channelName(t, s.channel)}</td>
+                        <td className="py-1 pe-2 align-top">{i === 0 ? purposeName(purposes, s.purpose, text) : ""}</td>
+                        <td className="py-1 pe-2 align-top">{channelName(t, s.channel)}</td>
                         <td className="py-1 align-top">
                           <span className="flex flex-col items-start gap-0.5">
                             <AnswerBadge granted={s.status === "none" ? null : s.status !== "withdrawn"} version={s.version} status={s.status} />
@@ -729,6 +729,7 @@ export function App() {
   const installBrand = useInstallBrand();
   const [theme] = useThemePreference();
   const [locale] = useLocalePreference();
+  setViewerLocale(locale);
   return (
     // The install's brand from config/brand.env (ADR 0053); OpenAsy's own look where it sets none.
     <BrandProvider theme={theme} locale={locale} brand={{ name: "OpenAsy", organization: undefined, ...installBrand }} className="min-h-screen">
